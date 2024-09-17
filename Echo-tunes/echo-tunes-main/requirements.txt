@@ -1,0 +1,4 @@
+eyed3~=0.9.7
+pygame~=2.5.2
+speech_recognition~=3.8.1
+pillow~=8.4.0
