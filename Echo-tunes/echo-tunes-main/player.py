@@ -234,6 +234,7 @@ def play_by_index(index):
 def next_song():
     global current_song
     current_selection = playlist.selection()
+    status_label.config(text="Status: Playing")
     if current_selection:  # if a song is selected
         current_index = playlist.get_children().index(current_selection[0])
         next_index = current_index + 1 if current_index + 1 < len(playlist.get_children()) else 0
@@ -249,6 +250,7 @@ def next_song():
 
 def previous_song():
     current_selection = playlist.selection()
+    status_label.config(text="Status: Playing")
     if current_selection:  # if a song is selected
         current_index = playlist.get_children().index(current_selection[0])
     else:  # if no song is selected, default to the first song
@@ -396,6 +398,14 @@ volume_scale.pack(side=tk.RIGHT)
 def on_exit():
     # Save playlists when the application is closed
     save_playlists()
+    pygame.mixer.music.stop()
+    root.quit()
+
+    # Bind the exit event to the function
+    root.protocol("WM_DELETE_WINDOW", on_exit)
+
+    # Start the Tkinter event loop
+    root.mainloop()
 
     # Stop the song if it's playing
     pygame.mixer.music.stop()
