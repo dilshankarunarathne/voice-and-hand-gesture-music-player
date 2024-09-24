@@ -3,7 +3,6 @@ import pyaudio
 import pickle
 import threading
 
-
 import tkinter as tk
 from tkinter import filedialog, Listbox
 from tkinter import ttk
@@ -48,7 +47,6 @@ control_frame.place(x=35, y=410, width=855, height=100)
 white_frame = tk.Frame(root, bg='#ffffff')
 white_frame.place(x=35, y=60, width=260, height=350)
 
-
 # Create Treeview with four columns
 columns = ('#1', '#2', '#3', '#4')
 playlist = ttk.Treeview(playlist_frame, columns=columns, show='headings')
@@ -73,6 +71,7 @@ img_1 = img_1.resize((260, 270))
 img_1 = ImageTk.PhotoImage(img_1)
 app_image = tk.Label(white_frame, height=350, image=img_1, bg='#ffffff')
 app_image.place(x=-2, y=-2)
+
 
 # Function to update the songs list when a playlist is selected
 def update_songs(evt):
@@ -205,17 +204,17 @@ def update_playlists():
 
 # Define player control functions
 def play_song():
-        current_selection = playlist.selection()
-        if current_selection:  # if a song is selected
-            song = playlist.item(current_selection[0])['values'][1]
-        else:  # if no song is selected, default to the first song
-            song = playlist.item(playlist.get_children()[0])['values'][1]
-        # Get the selected playlist
-        selected_playlist = playlists[playlists_listbox.curselection()[0]]
-        song_path = os.path.join(selected_playlist, song + '.mp3')
-        pygame.mixer.music.load(song_path)
-        pygame.mixer.music.play()
-        status_label.config(text="Status: Playing")
+    current_selection = playlist.selection()
+    if current_selection:  # if a song is selected
+        song = playlist.item(current_selection[0])['values'][1]
+    else:  # if no song is selected, default to the first song
+        song = playlist.item(playlist.get_children()[0])['values'][1]
+    # Get the selected playlist
+    selected_playlist = playlists[playlists_listbox.curselection()[0]]
+    song_path = os.path.join(selected_playlist, song + '.mp3')
+    pygame.mixer.music.load(song_path)
+    pygame.mixer.music.play()
+    status_label.config(text="Status: Playing")
 
 
 def play_by_index(index):
@@ -271,6 +270,7 @@ def stop_song():
     pygame.mixer.music.stop()
     status_label.config(text="Status: Stopped")
 
+
 def resume_song():
     pygame.mixer.music.unpause()
     status_label.config(text="Status: Resume")
@@ -284,6 +284,8 @@ def resume_song():
 
 # Function to update the volume level
 current_volume = 40  # Starting volume at 40%
+
+
 def set_volume(change):
     global current_volume
     current_volume += change
@@ -303,8 +305,6 @@ def set_volume(change):
     elif current_volume < 0:
         current_volume = 0  # Limit volume to 0%
     print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic '''
-
-
 
 # previous button
 img = Image.open('icons/back.png')
@@ -355,23 +355,36 @@ next_button = tk.Button(control_frame, image=next_icon, command=next_song, bg='#
 next_button.pack(side=tk.LEFT)
 next_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-
-
 # Volume up button
 img = Image.open('icons/volume_up.png')
 img = img.resize((50, 50), Image.LANCZOS)
 volume_up_icon = ImageTk.PhotoImage(img)
-volume_up_button = tk.Button(control_frame, image=volume_up_icon, command=lambda: set_volume(10), bg='#ffffff', compound=tk.CENTER)
+volume_up_button = tk.Button(control_frame, image=volume_up_icon, command=lambda: set_volume(10), bg='#ffffff',
+                             compound=tk.CENTER)
 volume_up_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
 # Volume down button
 img = Image.open('icons/volume-down.png')
 img = img.resize((50, 50), Image.LANCZOS)
 volume_down_icon = ImageTk.PhotoImage(img)
-volume_down_button = tk.Button(control_frame, image=volume_down_icon, command=lambda: set_volume(-10), bg='#ffffff', compound=tk.CENTER)
+volume_down_button = tk.Button(control_frame, image=volume_down_icon, command=lambda: set_volume(-10), bg='#ffffff',
+                               compound=tk.CENTER)
 volume_down_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
 
+# Function to update the volume level
+current_volume = 40  # Starting volume at 40%
+
+def set_volume(change):
+    global current_volume
+    change = int(change)  # Convert change to integer
+    current_volume += change
+    if current_volume > 100:
+        current_volume = 100  # Limit volume to 100%
+    elif current_volume < 0:
+        current_volume = 0  # Limit volume to 0%
+    pygame.mixer.music.set_volume(current_volume / 100)  # Apply volume change to mixer
+    print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic
 
 """ img = Image.open('icons/volume_up.png')
 img = img.resize((50, 50), Image.LANCZOS)
@@ -431,7 +444,7 @@ root.protocol("WM_DELETE_WINDOW", on_exit)
 
 
 # Function to handle voice commands
-def handle_voice_commands(volume_scale=10):
+def handle_voice_commands():
     global current_song, songs
     while True:
         if exit_flag:
@@ -486,13 +499,16 @@ def handle_voice_commands(volume_scale=10):
         else:
             print("Command not recognized: " + command)
 
+
 favorites = []
+
 
 def add_song(filename, i, is_favorite=False):
     # Existing code to add song to the playlist
     ...
     if is_favorite:
         favorites.append(filename)
+
 
 def show_favorites():
     # Clear the playlist display
@@ -507,6 +523,7 @@ def show_favorites():
         except Exception as e:
             print(f"Error loading file {song}: {e}")
 
+
 def toggle_favorite():
     selected_song = playlist.item(playlist.selection())['values'][1]
     if selected_song in favorites:
@@ -516,16 +533,24 @@ def toggle_favorite():
         favorites.append(selected_song)
         print(f"Added {selected_song} to favorites")
 
+
 def show_favorite_songs():
     show_favorites()
+
 
 # favourite button
 img = Image.open('icons/favorite.png')
 img = img.resize((50, 50), Image.LANCZOS)
 favourite_icon = ImageTk.PhotoImage(img)
-favourite_button = tk.Button(control_frame, image=favourite_icon, command=show_favorite_songs, bg='#ffffff', compound=tk.CENTER)
+favourite_button = tk.Button(control_frame, image=favourite_icon, command=show_favorite_songs, bg='#ffffff',
+                             compound=tk.CENTER)
 favourite_button.pack(side=tk.LEFT)
 favourite_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+# Define volume_scale
+volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, label="Volume", command=set_volume, bg='#ffffff')
+volume_scale.set(40)  # Set default volume to 40%
+volume_scale.pack(side=tk.RIGHT)
 
 # Start voice command handler in a separate thread
 voice_thread = threading.Thread(target=handle_voice_commands)
