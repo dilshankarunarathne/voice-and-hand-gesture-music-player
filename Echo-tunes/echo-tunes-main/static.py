@@ -8,4 +8,4 @@ volume_down_commands = ["volume down", "quieter", "decrease volume"]
 launch_commands = ["launch", "music player", "launch music player", "launch player", "launch", "echo tunes",
                    "launch echo tunes"]
 search_playlist_commands = ["search playlist", "find playlist", "select playlist"]
-resume_command = ["resume", "continue", "resume song", "continue song"]
+'''resume_command = ["resume", "continue", "resume song", "continue song"]'''
