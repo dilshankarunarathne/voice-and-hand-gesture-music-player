@@ -2,10 +2,11 @@ import os
 import pyaudio
 import pickle
 import threading
-
+import speech_recognition as sr
 import tkinter as tk
 from tkinter import filedialog, Listbox
 from tkinter import ttk
+import time
 
 from PIL import Image, ImageTk
 
@@ -216,7 +217,6 @@ def play_song():
     pygame.mixer.music.play()
     status_label.config(text="Status: Playing")
 
-
 def play_by_index(index):
     global current_song, songs
     # Get the selected playlist
@@ -229,6 +229,31 @@ def play_by_index(index):
     current_song = song
     songs = os.listdir(selected_playlist)
 
+'''def play_music(index):
+    global current_song, current_singer, current_status, start_time, song_length, current_song_index
+    if index < 0 or index >= len(songs):
+        print("Invalid song index")
+        return
+
+    file = songs[index]
+    pygame.mixer.music.load(file)
+    pygame.mixer.music.play()
+    pygame.mixer.music.set_volume(current_volume)  # Set initial volume
+    start_time = time.time()
+    song_length = pygame.mixer.Sound(file).get_length()
+
+    # Extract song and singer from filename
+    file_name = os.path.basename(file).replace('.mp3', '')
+    if '-' in file_name:
+        current_song, current_singer = file_name.split('-', 1)
+    else:
+        current_song = file_name
+        current_singer = "Unknown"
+
+    current_status = "Playing"
+    current_song_index = index
+    print("Playing music...")
+'''
 
 def next_song():
     global current_song
@@ -278,9 +303,6 @@ def resume_song():
 
 
 # Define volume control function
-'''def set_volume(val):
-    volume = int(val) / 100  # we need to normalize our value to be between 0 and 1
-    pygame.mixer.music.set_volume(volume)'''
 
 # Function to update the volume level
 current_volume = 40  # Starting volume at 40%
@@ -296,15 +318,6 @@ def set_volume(change):
     pygame.mixer.music.set_volume(current_volume / 100)  # Apply volume change to mixer
     print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic
 
-
-'''def set_volume(change):
-    global current_volume
-    current_volume += change
-    if current_volume > 100:
-        current_volume = 100  # Limit volume to 100%
-    elif current_volume < 0:
-        current_volume = 0  # Limit volume to 0%
-    print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic '''
 
 # previous button
 img = Image.open('icons/back.png')
@@ -386,28 +399,6 @@ def set_volume(change):
     pygame.mixer.music.set_volume(current_volume / 100)  # Apply volume change to mixer
     print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic
 
-""" img = Image.open('icons/volume_up.png')
-img = img.resize((50, 50), Image.LANCZOS)
-volume_up_icon = ImageTk.PhotoImage(img)
-volume_up_button = tk.Button(control_frame, image=volume_up_icon, command=set_volume, bg='#ffffff', compound=tk.CENTER)
-volume_up_button.pack(side=tk.LEFT)
-volume_up_button.pack(side=tk.LEFT, padx=5, pady=5)
-
-img = Image.open('icons/volume-down.png')
-img = img.resize((50, 50), Image.LANCZOS)
-volume_down_icon = ImageTk.PhotoImage(img)
-volume_down_button = tk.Button(control_frame, image=volume_down_icon, command=set_volume, bg='#ffffff', compound=tk.CENTER)
-volume_down_button.pack(side=tk.LEFT)
-volume_down_button.pack(side=tk.LEFT, padx=5, pady=5)
-
-# Modify volume_scale to call set_volume when the scale is moved
-volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, label="Volume", command=set_volume,
-                        bg='#ffffff')
-volume_scale.set(40)  # Set default volume to 40%
-volume_scale.pack(side=tk.RIGHT)
-"""
-
-
 def on_exit():
     # Save playlists when the application is closed
     save_playlists()
@@ -443,66 +434,74 @@ exit_flag = False
 root.protocol("WM_DELETE_WINDOW", on_exit)
 
 
-# Function to handle voice commands
-def handle_voice_commands():
+def handle_voice_command(recognizer, microphone):
     global current_song, songs
     while True:
         if exit_flag:
             break
 
-        command = parse_voice_command()
-        if command == "":
-            voice_command_label.config(text="Voice Command: Listening...")
-        else:
-            voice_command_label.config(text=f"Voice Command: {command}")
+        with microphone as source:
+            print("Listening for command...")
+            audio = recognizer.listen(source, timeout=3, phrase_time_limit=2)
+            try:
+                command = recognizer.recognize_google(audio)
+                command = command.lower()
+                print("You said: " + command)
 
-        if command in play_commands:
-            play_song()
-        elif command in stop_commands:
-            pause_song()
-        elif command in next_song_commands:
-            next_song()
-        elif command in previous_song_commands:
-            previous_song()
-        elif command in stop_commands:
-            stop_song()
-        elif command in pause_commands:
-            pause_song()
-        elif command in volume_up_commands:
-            current_volume = volume_scale.get()
-            new_volume = current_volume + 10 if current_volume + 10 < 100 else 100
-            volume_scale.set(new_volume)
-        elif command in volume_down_commands:
-            current_volume = volume_scale.get()
-            new_volume = current_volume - 10 if current_volume - 10 > 0 else 0
-            volume_scale.set(new_volume)
-        elif any(cmd in command for cmd in search_playlist_commands):
-            playlist_name = command.split(" ", 2)[2]
-            playlist_index = search_playlist(playlist_name)
-            if playlist_index is not None:
-                print("Found playlist ", playlist_index, ": ", playlist_name)
-                playlists_listbox.selection_set(playlist_index)
-                update_songs(None)
-            else:
-                print("Playlist not found: " + playlist_name)
-        elif command.split(" ")[0] == "play" and command.split(" ")[1] == "song" and len(command.split(" ")) > 2:
-            song_name = command.split(" ", 2)[2]
-            song_index = search_song(song_name)  # search for the song name instead of the whole command
-            if song_index is not None:
-                print("Playing song ", song_index, ": ", song_name)
-                play_by_index(song_index)
-                current_song = song_name  # Update the current_song variable
-                songs = [playlist.item(item)['values'][1] for item in playlist.get_children()]  # Update the songs list
-                playlist.selection_set(playlist.get_children()[song_index])  # Select the song in the playlist
-            else:
-                print("Song not found: " + song_name)
-        else:
-            print("Command not recognized: " + command)
+                # Update voice command label
+                voice_command_label.config(text=f"Voice Command: {command}")
+
+                # Command handling
+                if command in play_commands:
+                    play_song()
+                elif command in stop_commands:
+                    pause_song()
+                elif command in next_song_commands:
+                    next_song()
+                elif command in previous_song_commands:
+                    previous_song()
+                elif command in stop_commands:
+                    stop_song()
+                elif command in pause_commands:
+                    pause_song()
+                elif command in volume_up_commands:
+                    current_volume = volume_scale.get()
+                    new_volume = current_volume + 10 if current_volume + 10 < 100 else 100
+                    volume_scale.set(new_volume)
+                elif command in volume_down_commands:
+                    current_volume = volume_scale.get()
+                    new_volume = current_volume - 10 if current_volume - 10 > 0 else 0
+                    volume_scale.set(new_volume)
+                elif any(cmd in command for cmd in search_playlist_commands):
+                    playlist_name = command.split(" ", 2)[2]
+                    playlist_index = search_playlist(playlist_name)
+                    if playlist_index is not None:
+                        print("Found playlist ", playlist_index, ": ", playlist_name)
+                        playlists_listbox.selection_set(playlist_index)
+                        update_songs(None)
+                    else:
+                        print("Playlist not found: " + playlist_name)
+                elif command.split(" ")[0] == "play" and command.split(" ")[1] == "song" and len(
+                        command.split(" ")) > 2:
+                    song_name = command.split(" ", 2)[2]
+                    song_index = search_song(song_name)  # search for the song name instead of the whole command
+                    if song_index is not None:
+                        print("Playing song ", song_index, ": ", song_name)
+                        play_by_index(song_index)
+                        current_song = song_name  # Update the current_song variable
+                        songs = [playlist.item(item)['values'][1] for item in
+                                 playlist.get_children()]  # Update the songs list
+                        playlist.selection_set(playlist.get_children()[song_index])  # Select the song in the playlist
+                    else:
+                        print("Song not found: " + song_name)
+                else:
+                    print("Command not recognized: " + command)
+
+            except sr.UnknownValueError:
+                print("Sorry, I did not understand the audio")
 
 
 favorites = []
-
-
 def add_song(filename, i, is_favorite=False):
     # Existing code to add song to the playlist
     ...
@@ -552,8 +551,12 @@ volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, la
 volume_scale.set(40)  # Set default volume to 40%
 volume_scale.pack(side=tk.RIGHT)
 
-# Start voice command handler in a separate thread
-voice_thread = threading.Thread(target=handle_voice_commands)
+# Initialize speech recognizer and microphone
+recognizer = sr.Recognizer()
+microphone = sr.Microphone()
+
+# Run the voice command handler in a separate thread
+voice_thread = threading.Thread(target=handle_voice_command, args=(recognizer, microphone))
 voice_thread.start()
 
 # Run the main loop
