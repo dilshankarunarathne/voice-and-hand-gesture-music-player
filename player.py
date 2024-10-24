@@ -207,7 +207,24 @@ def update_playlists():
         playlists_listbox.insert(tk.END, os.path.basename(playlist))
 
 
-# Define player control functions
+def add_song(filename, i, is_favorite=False):
+    # Assuming songs are in the selected playlist directory
+    selected_playlist = playlists[playlists_listbox.curselection()[0]]
+    song_path = os.path.join(selected_playlist, filename + '.mp3')
+    if os.path.exists(song_path):
+        try:
+            audiofile = eyed3.load(song_path)
+            artist = audiofile.tag.artist
+            album = audiofile.tag.album
+            playlist.insert('', 'end', values=(i, filename, artist, album))
+            if is_favorite:
+                favorites.append(filename)
+        except Exception as e:
+            print(f"Error loading file {filename}: {e}")
+    else:
+        print(f"File not found: {song_path}")
+
+
 def play_song():
     current_selection = playlist.selection()
     if current_selection:  # if a song is selected
@@ -217,9 +234,12 @@ def play_song():
     # Get the selected playlist
     selected_playlist = playlists[playlists_listbox.curselection()[0]]
     song_path = os.path.join(selected_playlist, song + '.mp3')
-    pygame.mixer.music.load(song_path)
-    pygame.mixer.music.play()
-    status_label.config(text="Status: Playing")
+    if os.path.exists(song_path):
+        pygame.mixer.music.load(song_path)
+        pygame.mixer.music.play()
+        status_label.config(text="Status: Playing")
+    else:
+        print(f"File not found: {song_path}")
 
 
 def play_by_index(index):
@@ -495,33 +515,44 @@ def add_song(filename, i, is_favorite=False):
         favorites.append(filename)
 
 
+def toggle_favorite():
+    selected_song = playlist.item(playlist.selection())['values'][1]
+    selected_playlist = playlists[playlists_listbox.curselection()[0]]
+    song_path = os.path.join(selected_playlist, selected_song + '.mp3')
+    if song_path in favorites:
+        favorites.remove(song_path)
+        print(f"Removed {selected_song} from favorites")
+    else:
+        favorites.append(song_path)
+        print(f"Added {selected_song} to favorites")
+
+
 def show_favorites():
     # Clear the playlist display
     playlist.delete(*playlist.get_children())
     # Add favorite songs to the playlist display
-    for i, song in enumerate(favorites, start=1):
+    for i, song_path in enumerate(favorites, start=1):
         try:
-            audiofile = eyed3.load(os.path.join(songs_dir, song + '.mp3'))
+            audiofile = eyed3.load(song_path)
             artist = audiofile.tag.artist
             album = audiofile.tag.album
-            playlist.insert('', 'end', values=(i, song, artist, album))
+            filename = os.path.splitext(os.path.basename(song_path))[0]
+            playlist.insert('', 'end', values=(i, filename, artist, album))
         except Exception as e:
-            print(f"Error loading file {song}: {e}")
-
-
-def toggle_favorite():
-    selected_song = playlist.item(playlist.selection())['values'][1]
-    if selected_song in favorites:
-        favorites.remove(selected_song)
-        print(f"Removed {selected_song} from favorites")
-    else:
-        favorites.append(selected_song)
-        print(f"Added {selected_song} to favorites")
+            print(f"Error loading file {song_path}: {e}")
 
 
 def show_favorite_songs():
     show_favorites()
 
+
+# Create a button to toggle favorite status
+toggle_favorite_button = tk.Button(control_frame, text="Toggle Favorite", command=toggle_favorite, bg='#7E84F7')
+toggle_favorite_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+# Create a button to show favorite songs
+show_favorites_button = tk.Button(control_frame, text="Show Favorites", command=show_favorites, bg='#7E84F7')
+show_favorites_button.pack(side=tk.LEFT, padx=5, pady=5)
 
 # favourite button
 img = Image.open('icons/favorite.png')
@@ -656,7 +687,7 @@ gesture_thread.start()
 # Run the main loop
 root.mainloop()
 
-# TODO add a seperator toggle for gesture and voice control
-# TODO implement favourite
+# add a seperator toggle for gesture and voice control
+# implement favourite
 # TODO search song with gesture
 # TODO add camera video to the player frame
