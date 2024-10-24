@@ -1,6 +1,8 @@
 .dart_tool/
 .vscode/
 
+gesture/data
+
 # Miscellaneous
 *.class
 *.log
@@ -46,3 +48,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 *.mp3
+gesture/data.pickle
