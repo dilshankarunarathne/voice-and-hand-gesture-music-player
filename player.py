@@ -651,3 +651,8 @@ gesture_thread.start()
 
 # Run the main loop
 root.mainloop()
+
+# TODO add a seperator toggle for gesture and voice control
+# TODO implement favourite
+# TODO search song with gesture
+# TODO add camera video to the player frame
