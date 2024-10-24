@@ -558,13 +558,13 @@ show_favorites_button = tk.Button(control_frame, text="Show Favorites", command=
 show_favorites_button.pack(side=tk.LEFT, padx=5, pady=5)
 
 # favourite button
-img = Image.open('icons/favorite.png')
-img = img.resize((50, 50), Image.LANCZOS)
-favourite_icon = ImageTk.PhotoImage(img)
-favourite_button = tk.Button(control_frame, image=favourite_icon, command=show_favorite_songs, bg='#ffffff',
-                             compound=tk.CENTER)
-favourite_button.pack(side=tk.LEFT)
-favourite_button.pack(side=tk.LEFT, padx=5, pady=5)
+# img = Image.open('icons/favorite.png')
+# img = img.resize((50, 50), Image.LANCZOS)
+# favourite_icon = ImageTk.PhotoImage(img)
+# favourite_button = tk.Button(control_frame, image=favourite_icon, command=show_favorite_songs, bg='#ffffff',
+#                              compound=tk.CENTER)
+# favourite_button.pack(side=tk.LEFT)
+# favourite_button.pack(side=tk.LEFT, padx=5, pady=5)
 
 # Define volume_scale
 volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, label="Volume", command=set_volume,
@@ -712,28 +712,66 @@ def recognize_hand_gestures():
                         cv2.LINE_AA)
 
         cv2.imshow('frame', frame)
-        cv2.waitKey(1000)  # TODO wait time
+        cv2.waitKey(1000)  # wait time
 
     cap.release()
     cv2.destroyAllWindows()
 
 
+# Global variable to keep track of the current mode
+current_mode = "voice"  # Default mode is voice
+
+# Function to toggle between voice and gesture modes
+def toggle_mode():
+    global current_mode, voice_thread, gesture_thread, exit_flag
+
+    if current_mode == "voice":
+        current_mode = "gesture"
+        print("Switched to gesture mode")
+        mode_toggle_button.config(text="Switch to Voice Mode")
+
+        # Stop the voice command thread
+        exit_flag = True
+        if voice_thread.is_alive():
+            voice_thread.join()
+
+        # Start the gesture command thread
+        exit_flag = False
+        gesture_thread = threading.Thread(target=recognize_hand_gestures)
+        gesture_thread.start()
+
+    else:
+        current_mode = "voice"
+        print("Switched to voice mode")
+        mode_toggle_button.config(text="Switch to Gesture Mode")
+
+        # Stop the gesture command thread
+        exit_flag = True
+        if gesture_thread.is_alive():
+            gesture_thread.join()
+
+        # Start the voice command thread
+        exit_flag = False
+        voice_thread = threading.Thread(target=handle_voice_command, args=(recognizer, microphone))
+        voice_thread.start()
+
 # Initialize speech recognizer and microphone
 recognizer = sr.Recognizer()
 microphone = sr.Microphone()
 
-# Run the voice command handler in a separate thread
+# Add a button to toggle between voice and gesture modes
+mode_toggle_button = tk.Button(control_frame, text="Switch to Gesture Mode", command=toggle_mode, bg='#7E84F7')
+mode_toggle_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+# Start the voice command handler in a separate thread
+exit_flag = False
 voice_thread = threading.Thread(target=handle_voice_command, args=(recognizer, microphone))
 voice_thread.start()
-
-# Start the hand gesture recognition in a separate thread
-gesture_thread = threading.Thread(target=recognize_hand_gestures)
-gesture_thread.start()
 
 # Run the main loop
 root.mainloop()
 
 # add a seperator toggle for gesture and voice control
 # implement favourite
-# TODO search song with gesture
+# search song with gesture
 # TODO add camera video to the player frame
