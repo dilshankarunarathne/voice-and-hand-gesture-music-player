@@ -217,6 +217,7 @@ def play_song():
     pygame.mixer.music.play()
     status_label.config(text="Status: Playing")
 
+
 def play_by_index(index):
     global current_song, songs
     # Get the selected playlist
@@ -229,31 +230,6 @@ def play_by_index(index):
     current_song = song
     songs = os.listdir(selected_playlist)
 
-'''def play_music(index):
-    global current_song, current_singer, current_status, start_time, song_length, current_song_index
-    if index < 0 or index >= len(songs):
-        print("Invalid song index")
-        return
-
-    file = songs[index]
-    pygame.mixer.music.load(file)
-    pygame.mixer.music.play()
-    pygame.mixer.music.set_volume(current_volume)  # Set initial volume
-    start_time = time.time()
-    song_length = pygame.mixer.Sound(file).get_length()
-
-    # Extract song and singer from filename
-    file_name = os.path.basename(file).replace('.mp3', '')
-    if '-' in file_name:
-        current_song, current_singer = file_name.split('-', 1)
-    else:
-        current_song = file_name
-        current_singer = "Unknown"
-
-    current_status = "Playing"
-    current_song_index = index
-    print("Playing music...")
-'''
 
 def next_song():
     global current_song
@@ -384,9 +360,9 @@ volume_down_button = tk.Button(control_frame, image=volume_down_icon, command=la
                                compound=tk.CENTER)
 volume_down_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
-
 # Function to update the volume level
 current_volume = 40  # Starting volume at 40%
+
 
 def set_volume(change):
     global current_volume
@@ -398,6 +374,7 @@ def set_volume(change):
         current_volume = 0  # Limit volume to 0%
     pygame.mixer.music.set_volume(current_volume / 100)  # Apply volume change to mixer
     print(f"Volume set to: {current_volume}%")  # Replace with actual volume control logic
+
 
 def on_exit():
     # Save playlists when the application is closed
@@ -502,6 +479,8 @@ def handle_voice_command(recognizer, microphone):
 
 
 favorites = []
+
+
 def add_song(filename, i, is_favorite=False):
     # Existing code to add song to the playlist
     ...
@@ -547,7 +526,8 @@ favourite_button.pack(side=tk.LEFT)
 favourite_button.pack(side=tk.LEFT, padx=5, pady=5)
 
 # Define volume_scale
-volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, label="Volume", command=set_volume, bg='#ffffff')
+volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, label="Volume", command=set_volume,
+                        bg='#ffffff')
 volume_scale.set(40)  # Set default volume to 40%
 volume_scale.pack(side=tk.RIGHT)
 

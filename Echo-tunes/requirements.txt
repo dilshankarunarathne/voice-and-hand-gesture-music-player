@@ -1,0 +1,7 @@
+eyed3~=0.9.7
+pygame~=2.5.2
+speech_recognition~=3.8.1
+pillow~=8.4.0
+opencv-python==4.7.0.68
+mediapipe==0.9.0.1
+scikit-learn==1.2.0
