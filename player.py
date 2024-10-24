@@ -226,11 +226,15 @@ def add_song(filename, i, is_favorite=False):
 
 
 def play_song():
-    current_selection = playlist.selection()
-    if current_selection:  # if a song is selected
-        song = playlist.item(current_selection[0])['values'][1]
-    else:  # if no song is selected, default to the first song
-        song = playlist.item(playlist.get_children()[0])['values'][1]
+    try:
+        current_selection = playlist.selection()
+        if current_selection:  # if a song is selected
+            song = playlist.item(current_selection[0])['values'][1]
+        else:  # if no song is selected, default to the first song
+            song = playlist.item(playlist.get_children()[0])['values'][1]
+    except Exception as e:
+        print(f"Error selecting song: {e}")
+        return
     # Get the selected playlist
     selected_playlist = playlists[playlists_listbox.curselection()[0]]
     song_path = os.path.join(selected_playlist, song + '.mp3')
@@ -268,7 +272,10 @@ def next_song():
             next_index = current_index + 1 if current_index + 1 < len(songs) else 0
         else:  # if current_song is False, default to the first song
             next_index = 0
-    playlist.selection_set(playlist.get_children()[next_index])
+    try:
+        playlist.selection_set(playlist.get_children()[next_index])
+    except Exception as e:
+        print(f"Error selecting next song: {e}")
     play_song()
 
 
@@ -280,7 +287,10 @@ def previous_song():
     else:  # if no song is selected, default to the first song
         current_index = 0
     prev_index = current_index - 1 if current_index > 0 else len(playlist.get_children()) - 1
-    playlist.selection_set(playlist.get_children()[prev_index])
+    try:
+        playlist.selection_set(playlist.get_children()[prev_index])
+    except Exception as e:
+        print(f"Error selecting previous song: {e}")
     play_song()
 
 
@@ -508,13 +518,6 @@ def handle_voice_command(recognizer, microphone):
 favorites = []
 
 
-def add_song(filename, i, is_favorite=False):
-    # Existing code to add song to the playlist
-    ...
-    if is_favorite:
-        favorites.append(filename)
-
-
 def toggle_favorite():
     selected_song = playlist.item(playlist.selection())['values'][1]
     selected_playlist = playlists[playlists_listbox.curselection()[0]]
@@ -569,8 +572,37 @@ volume_scale = tk.Scale(control_frame, from_=0, to=100, orient=tk.HORIZONTAL, la
 volume_scale.set(40)  # Set default volume to 40%
 volume_scale.pack(side=tk.RIGHT)
 
+gesture_list = []
+gesture_counter = 0
+
+
+def search_song_visual():
+    global gesture_counter
+    gesture_counter = 0  # Reset the counter when 'S' is detected
+    print("Search mode activated. Waiting for two word gestures...")
+
+
+def play_search_song():
+    global gesture_counter
+    if gesture_counter >= 2:
+        search_term = ' '.join(set(gesture_list[-2:]))  # Use set to ensure unique words
+        song_index = search_song(search_term)
+        if song_index is not None:
+            print("Playing song ", song_index, ": ", search_term)
+            play_by_index(song_index)
+            current_song = search_term  # Update the current_song variable
+            songs = [playlist.item(item)['values'][1] for item in playlist.get_children()]  # Update the songs list
+            playlist.selection_set(playlist.get_children()[song_index])  # Select the song in the playlist
+        else:
+            print("Song not found: " + search_term)
+        gesture_list.clear()  # Clear the gesture list after search
+        gesture_counter = 0  # Reset the counter
+    else:
+        print("Not enough gestures for search")
+
 
 def gesture_control(character):
+    global gesture_counter
     if character == 'A':
         play_song()
     elif character == 'B':
@@ -583,6 +615,20 @@ def gesture_control(character):
         set_volume(10)
     elif character == 'F':
         set_volume(-10)
+    elif character == 'S':
+        search_song_visual()
+    elif character == 'H':
+        gesture_list.append('be')
+        gesture_counter += 1
+        play_search_song()
+    elif character == 'Y':
+        gesture_list.append('more')
+        gesture_counter += 1
+        play_search_song()
+    elif character == 'G':
+        gesture_list.append('bones')
+        gesture_counter += 1
+        play_search_song()
 
 
 # Function to recognize hand gestures

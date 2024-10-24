@@ -9,19 +9,17 @@ def search_song(search_term):
     search_term = search_term.lower().replace('&', '')
 
     search_term_words = search_term.split(" ")
-    search_term_words = [word for word in search_term_words if word != "the"]
-    search_term_words = [word for word in search_term_words if word != "song"]
-    search_term_words = [word for word in search_term_words if word != "play"]
+    search_term_words = [word for word in search_term_words if word not in ["the", "song", "play"]]
 
     print(songs_dict)
 
     for song in songs_dict.keys():
-        song = song.replace('&', '')
-        print(song + " <> ", search_term_words)
-        song_words = song.split(" ")
+        song_normalized = song.lower().replace('&', '')
+        print(song_normalized + " <> " + str(search_term_words))
+        song_words = song_normalized.split(" ")
         song_words = [word for word in song_words if word != "the"]
 
-        if set(search_term_words).issubset(set(song_words)):
+        if any(word in song_words for word in search_term_words):
             return songs_dict[song]
 
     return None
