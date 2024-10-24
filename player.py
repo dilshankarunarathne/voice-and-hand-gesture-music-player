@@ -447,10 +447,7 @@ root.protocol("WM_DELETE_WINDOW", on_exit)
 
 def handle_voice_command(recognizer, microphone):
     global current_song, songs
-    while True:
-        if exit_flag:
-            break
-
+    while not exit_flag:
         with microphone as source:
             print("Listening for command...")
             try:
@@ -466,47 +463,32 @@ def handle_voice_command(recognizer, microphone):
                 if command in play_commands:
                     play_song()
                 elif command in stop_commands:
-                    pause_song()
+                    stop_song()
                 elif command in next_song_commands:
                     next_song()
                 elif command in previous_song_commands:
                     previous_song()
-                elif command in stop_commands:
-                    stop_song()
                 elif command in pause_commands:
                     pause_song()
                 elif command in volume_up_commands:
-                    current_volume = volume_scale.get()
-                    new_volume = current_volume + 10 if current_volume + 10 < 100 else 100
-                    volume_scale.set(new_volume)
+                    set_volume(10)
                 elif command in volume_down_commands:
-                    current_volume = volume_scale.get()
-                    new_volume = current_volume - 10 if current_volume - 10 > 0 else 0
-                    volume_scale.set(new_volume)
+                    set_volume(-10)
                 elif any(cmd in command for cmd in search_playlist_commands):
-                    playlist_name = command.split(" ", 2)[2]
-                    playlist_index = search_playlist(playlist_name)
+                    search_term = command.split(" ", 1)[1]
+                    playlist_index = search_playlist(search_term)
                     if playlist_index is not None:
-                        print("Found playlist ", playlist_index, ": ", playlist_name)
+                        playlists_listbox.selection_clear(0, tk.END)
                         playlists_listbox.selection_set(playlist_index)
-                        update_songs(None)
-                    else:
-                        print("Playlist not found: " + playlist_name)
+                        playlists_listbox.event_generate("<<ListboxSelect>>")
                 elif command.split(" ")[0] == "play" and command.split(" ")[1] == "song" and len(
                         command.split(" ")) > 2:
-                    song_name = command.split(" ", 2)[2]
-                    song_index = search_song(song_name)  # search for the song name instead of the whole command
+                    search_term = " ".join(command.split(" ")[2:])
+                    song_index = search_song(search_term)
                     if song_index is not None:
-                        print("Playing song ", song_index, ": ", song_name)
                         play_by_index(song_index)
-                        current_song = song_name  # Update the current_song variable
-                        songs = [playlist.item(item)['values'][1] for item in
-                                 playlist.get_children()]  # Update the songs list
-                        playlist.selection_set(playlist.get_children()[song_index])  # Select the song in the playlist
-                    else:
-                        print("Song not found: " + song_name)
                 else:
-                    print("Command not recognized: " + command)
+                    print("Command not recognized")
 
             except sr.UnknownValueError:
                 print("Sorry, I did not understand the audio")
@@ -631,7 +613,6 @@ def gesture_control(character):
         play_search_song()
 
 
-# Function to recognize hand gestures
 def recognize_hand_gestures():
     model_dict = pickle.load(open('gesture/model.p', 'rb'))
     model = model_dict['model']
@@ -652,12 +633,14 @@ def recognize_hand_gestures():
 
     max_length = 42
 
-    while True:
+    while not exit_flag:
         data_aux = []
         x_ = []
         y_ = []
 
         ret, frame = cap.read()
+        if not ret:
+            break
 
         H, W, _ = frame.shape
 
@@ -712,7 +695,8 @@ def recognize_hand_gestures():
                         cv2.LINE_AA)
 
         cv2.imshow('frame', frame)
-        cv2.waitKey(1000)  # wait time
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
     cap.release()
     cv2.destroyAllWindows()
@@ -720,6 +704,7 @@ def recognize_hand_gestures():
 
 # Global variable to keep track of the current mode
 current_mode = "voice"  # Default mode is voice
+
 
 # Function to toggle between voice and gesture modes
 def toggle_mode():
@@ -755,6 +740,7 @@ def toggle_mode():
         voice_thread = threading.Thread(target=handle_voice_command, args=(recognizer, microphone))
         voice_thread.start()
 
+
 # Initialize speech recognizer and microphone
 recognizer = sr.Recognizer()
 microphone = sr.Microphone()
@@ -774,4 +760,4 @@ root.mainloop()
 # add a seperator toggle for gesture and voice control
 # implement favourite
 # search song with gesture
-# TODO add camera video to the player frame
+# add camera video to the player frame
