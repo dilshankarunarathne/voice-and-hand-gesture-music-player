@@ -1,8 +1,9 @@
 songs_dict = {}
 
 
-def add_song(title: str, index: int):
-    songs_dict[title.lower()] = index-1
+def add_song_to_dict(title: str, index: int):
+    print("Adding song: " + title + " at index " + str(index))
+    songs_dict[title.lower()] = index - 1
 
 
 def search_song(search_term):

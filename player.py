@@ -17,7 +17,7 @@ import eyed3
 import pygame
 from speech_recognition.exceptions import WaitTimeoutError
 
-from search import add_song, search_song
+from search import search_song, add_song_to_dict
 from static import *
 from voice import parse_voice_command
 
@@ -93,7 +93,7 @@ def update_songs(evt):
                 audiofile = eyed3.load(os.path.join(selected_playlist, song))
                 artist = audiofile.tag.artist
                 album = audiofile.tag.album
-                add_song(filename, i)
+                add_song_to_dict(filename, i)
                 playlist.insert('', 'end', values=(i, filename, artist, album))
             except Exception as e:
                 print(f"Error loading file {song}: {e}")
@@ -139,7 +139,7 @@ for i, song in enumerate(songs, start=0):
             audiofile = eyed3.load(os.path.join(songs_dir, song))
             artist = audiofile.tag.artist
             album = audiofile.tag.album
-            add_song(filename, i)
+            add_song_to_dict(filename, i)
             playlist.insert('', 'end', values=(i, filename, artist, album))
         except Exception as e:
             print(f"Error loading file {song}: {e}")
