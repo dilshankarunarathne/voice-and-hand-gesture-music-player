@@ -15,6 +15,7 @@ from PIL import Image, ImageTk
 
 import eyed3
 import pygame
+from speech_recognition.exceptions import WaitTimeoutError
 
 from search import add_song, search_song
 from static import *
@@ -479,6 +480,9 @@ def handle_voice_command(recognizer, microphone):
 
             except sr.UnknownValueError:
                 print("Sorry, I did not understand the audio")
+
+            except WaitTimeoutError:
+                print("Timeout waiting for audio")
 
 
 favorites = []
