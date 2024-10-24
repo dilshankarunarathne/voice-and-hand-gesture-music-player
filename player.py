@@ -535,6 +535,21 @@ volume_scale.set(40)  # Set default volume to 40%
 volume_scale.pack(side=tk.RIGHT)
 
 
+def gesture_control(character):
+    if character == 'A':
+        play_song()
+    elif character == 'B':
+        stop_song()
+    elif character == 'C':
+        next_song()
+    elif character == 'D':
+        previous_song()
+    elif character == 'E':
+        set_volume(10)
+    elif character == 'F':
+        set_volume(-10)
+
+
 # Function to recognize hand gestures
 def recognize_hand_gestures():
     model_dict = pickle.load(open('gesture/model.p', 'rb'))
@@ -609,6 +624,7 @@ def recognize_hand_gestures():
             predicted_character = labels_dict[int(prediction[0])]
 
             print("Predicted character: ", predicted_character)
+            gesture_control(predicted_character)
 
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 0), 4)
             cv2.putText(frame, predicted_character, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 0, 0), 3,
