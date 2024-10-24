@@ -19,8 +19,8 @@ padded_data = np.array([np.pad(seq, (0, max_length - len(seq)), 'constant') for 
 # Convert labels to a NumPy array
 labels = np.asarray(labels)
 
-# Split the data
-x_train, x_test, y_train, y_test = train_test_split(padded_data, labels, test_size=0.2, shuffle=True, stratify=labels)
+# Split the data without stratification
+x_train, x_test, y_train, y_test = train_test_split(padded_data, labels, test_size=0.2, shuffle=True)
 
 # Train the model
 model = RandomForestClassifier()
